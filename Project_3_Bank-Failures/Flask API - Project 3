@@ -1,0 +1,59 @@
+
+from flask import Flask, jsonify
+from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+
+
+engine = create_engine("sqlite:///bank_db.db")
+
+conn =engine.connect()
+# reflect an existing database into a new model
+Base = automap_base()
+# reflect the tables
+Base.prepare(autoload_with=engine)
+
+session = Session(engine)
+app = Flask(__name__)
+
+@app.route('/')
+def hello():
+    return "Hello, Replace with your text!"
+
+@app.route('/banks', methods=['GET'])
+def get_banks():
+    Banks = Base.classes.bank_sql
+    banks = session.query(Banks.Fund, Banks.Bank_Name, Banks.City, Banks.State,\
+                          Banks.Bank_Failure_Date, Banks.Population, Banks.Total_Housing_Units, \
+                            Banks.Owner_Occupied_Units, Banks.Owner_Occupied_Rate,\
+                            Banks.Bachelors_or_higher, Banks.Census_Year).all()
+    
+    all_banks = []
+    for fund, bank_name, city, state, \
+            bank_failure_date, population,\
+                total_housing_unnits, \
+                    owner_occupied_units, \
+                        owner_occupied_rate,\
+                            bachelors_or_higher,\
+                                census_year in banks:
+        new_dict = {}        
+        new_dict["fund"] = fund
+        new_dict["bank_name"] = bank_name
+        new_dict["city"] = city
+        new_dict["state"] =  state
+        new_dict["bank_failure_date"] = bank_failure_date
+        new_dict["population"] = population
+        new_dict["total_housing_unnits"] = total_housing_unnits
+        new_dict["owner_occupied_units"] = owner_occupied_units
+        new_dict["owner_occupied_rate"] = owner_occupied_rate
+        new_dict["bachelors_or_higher"] = bachelors_or_higher
+        new_dict["census_year"] = census_year
+
+        all_banks.append(new_dict)
+
+    return jsonify(all_banks)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
